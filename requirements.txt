@@ -1,0 +1,4 @@
+ultralytics
+omegaconf
+cvzone
+flask
