@@ -6,23 +6,18 @@ import faiss
 import numpy as np
 import os
 
-# If required, create a face detection pipeline using MTCNN:
 mtcnn = MTCNN(image_size=160)
 
-# Create an inception resnet (in eval mode):
 resnet = InceptionResnetV1(pretrained='vggface2').eval()
-
 
 
 def get_embedding(img_path):
   img = Image.open(img_path)
   img_cropped = mtcnn(img)
-  # img_cropped = (img_cropped + 1) / 2
-  # img_cropped = img_cropped* 255
-
 
   img_embedding = resnet(img_cropped.unsqueeze(0))
   return img_embedding, img_cropped
+
 
 def save_img(img_cropped, save_path):
     tensor_normalized = (img_cropped + 1) / 2
@@ -86,4 +81,4 @@ def create_faiss_index(vectors_db):
 def find_k_nearest_neighbors(query_vector, vectors_db, k):
   # Tính khoảng cách giữa query_vector và các vector trong index.
   distances, indices = vectors_db.search(query_vector.reshape(1, -1), k)
-  return indices[0]
+  return indices[0], distances[0]

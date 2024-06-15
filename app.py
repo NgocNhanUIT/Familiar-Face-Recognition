@@ -1,6 +1,8 @@
 from flask import Flask, render_template, Response, request, redirect, url_for
 import cv2
-from faceDetect import face_detect
+# from faceDetect import face_detect
+# from liveness import face_detect
+from test import face_detect
 from faceDetect import process_video
 from werkzeug.utils import secure_filename
 import os

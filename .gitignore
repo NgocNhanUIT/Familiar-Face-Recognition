@@ -7,3 +7,5 @@ test.py
 test1.py
 test.ipynb
 /facenet_pytorch/
+/img/
+face_db.py
