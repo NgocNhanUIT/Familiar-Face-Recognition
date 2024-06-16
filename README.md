@@ -12,6 +12,8 @@ conda activate face-reg
 ## Install Requirements
 ```bash
 pip install -r requirements.txt
+git clone https://github.com/timesler/facenet-pytorch.git facenet_pytorch
+pip install git+https://github.com/THU-MIG/yolov10.git
 ```
 
 ## Download YOLOv8 Pretrained Weights

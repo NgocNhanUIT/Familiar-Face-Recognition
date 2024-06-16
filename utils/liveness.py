@@ -7,7 +7,7 @@ from facenet_pytorch import MTCNN, InceptionResnetV1
 import torch.nn.functional as F
 
 yolov10_weight_path = r"C:\Users\admin\Downloads\yolov10_weight.pt"
-yolov8_weight_path = r"C:\Users\admin\Downloads\yolov10_weight.pt"
+yolov8_weight_path = r"C:\Users\admin\Downloads\yolov8_weight.pt"
 
 def select_largest_face(face_boxes,whs):
     largest_area = 0
@@ -76,7 +76,7 @@ def load_model(yolo_version):
 
 def face_detect(video_source):
     
-    model,mtcnn,resnet = load_model(yolo_version="yolov10")
+    model,mtcnn,resnet = load_model(yolo_version="yolov8")
     
     print("Opening video...")
     cap = cv2.VideoCapture(video_source)
