@@ -12,5 +12,5 @@ yolov8_weight.pt
 face_db.py
 data/
 face_cropped.jpg
-static/images/
+# static/images/
 static/result/
