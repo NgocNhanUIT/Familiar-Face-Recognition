@@ -2,3 +2,4 @@ ultralytics
 omegaconf
 cvzone
 flask
+faiss-cpu

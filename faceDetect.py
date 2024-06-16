@@ -4,7 +4,7 @@ from ultralytics import YOLO
 
 video_source = r'C:\Users\NHAN\UIT_HK6\Nhan_dang\final_project\yolov9-face-detection\yolov9\runs\detect\exp2\0.mp4'
 # video_source = 0
-face_detector = YOLO('yolov8n-face.pt')
+face_detector = YOLO(r".\yolov8_weight.pt")
 
 def face_detect(video_source):
     cap = cv2.VideoCapture(video_source)
