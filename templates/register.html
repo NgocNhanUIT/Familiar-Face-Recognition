@@ -22,8 +22,8 @@
             <nav class="dashboard-nav-list">
                 <a href="/" class="dashboard-nav-item active"><i class="fas fa-camera"></i> Webcam </a>
                 <a href="/video" class="dashboard-nav-item"><i class="fas fa-video"></i> Video</a>
-                <a href="#" class="dashboard-nav-item"><i class="fas fa-file-upload"></i> Face Register </a>
-                <a href="#" class="dashboard-nav-item"><i class="fas fa-user"></i> Attendance Tracker </a>
+                <a href="/register" class="dashboard-nav-item"><i class="fas fa-file-upload"></i> Face Register </a>
+                <a href="/attendance" class="dashboard-nav-item"><i class="fas fa-user"></i> Attendance Tracker </a>
                 <div class="nav-item-divider"></div>
             </nav>
         </div>
@@ -34,35 +34,23 @@
             </header>
             <div class='dashboard-content'>
                 <div class='container'>
-                    <div class='model'>
-                        <div class="face-model">
-                            <h4>Face Detector & Liveness Detector: </h4>
-                            <select id="yolo-version" name="yolo-version">
-                                <option value="v8" {% if yolo_version == "v8" %}selected{% endif %}>YOLOv8</option>
-                                <option value="v10" {% if yolo_version == "v10" %}selected{% endif %}>YOLOv10</option>
-                            </select>
-                        </div>
-                        <div>
-                            <h4>Face Recognition: Inception Resnetv1</h4>
-                        </div>
-                    </div>
                     <div class='card'>
                         <div class='card-header'>
-                            <div class="webcam">
-                                <img src="{{ url_for('video_feed') }}" class="img-fluid">
-                            </div>
-                            <button id="face-reg" class="btn btn-primary" disabled>Recognize</button>
-                            <div class="info">
-                                <!-- <img src="../static/images/stranger.png" width="250px" height="200px" id="face-img">
-                                <p id="face-name">Stranger</p> -->
-                                <div class="face-info">
-                                    <p>Face</p>
+                            <div class="register-container">
+                                <img src="{{ url_for('video_feed') }}" width="100%">
+
+                                <div class="form-container">
+                                    <form action="{{ url_for('create_face_folder') }}" method="POST">
+                                        <label for="name">Enter Name:</label>
+                                        <input type="text" id="name" name="name" required >
+                                        <button type="submit">Create Face Folder</button>
+                                    </form>
+                                    <form action="{{ url_for('save_current_face') }}" method="POST">
+                                        <h5 class="mt-5">Save face image</h5>
+                                        <button type="submit" class="mt-2">Save Current Face</button>
+                                    </form>
                                 </div>
-                                <div class="user-info">
-                                    <p>Information</p>
-                                </div>
                             </div>
-                        </div>
                         
                     </div>
                 </div>

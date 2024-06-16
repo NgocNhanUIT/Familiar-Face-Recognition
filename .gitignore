@@ -1,9 +1,12 @@
 __pycache__/
 yolov8n-face.pt
+best.pt
+best0.pt
+img1.jpg
 test.py
+test1.py
+test.ipynb
 /facenet_pytorch/
+yolov8_weight.pt
 /img/
-face_db.csv
-face_cropped.jpg
-/weights/
-/utils/__pycache__/
+face_db.py

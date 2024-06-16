@@ -1,24 +1,29 @@
-from flask import Flask, render_template, Response, request, redirect, url_for
+from flask import Flask, render_template, Response, request, redirect, url_for, jsonify
 import cv2
-# from faceDetect import face_detect
-# from liveness import face_detect
-from test import face_detect
+from liveness import face_detect
 from faceDetect import process_video
 from werkzeug.utils import secure_filename
 import os
+import sqlite3
+from datetime import datetime
 
 app = Flask(__name__)
 
-UPLOAD_FOLDER = r'C:\Users\NHAN\UIT_HK6\Nhan_dang\final_project\static\upload'
-RESULT_FOLDER = r'C:\Users\NHAN\UIT_HK6\Nhan_dang\final_project\static\result'
+UPLOAD_FOLDER = r'.\static\upload'
+RESULT_FOLDER = r'.\static\result'
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['RESULT_FOLDER'] = RESULT_FOLDER
 video_path = None
 result_path = None
 
+# Global variable to track liveness status
+liveness_passed = False
+
 @app.route('/')
 def index():
-    return render_template('webcam.html')
+    global liveness_passed
+    liveness_passed = False  # Reset liveness check on load
+    return render_template('webcam.html', yolo_version='v8', pass_liveness=False)
 
 @app.route('/video')
 def index_video():
@@ -42,15 +47,40 @@ def upload_video():
 
 @app.route('/show_video/<video_filename>', methods=['GET'])
 def show_video(video_filename):
-    # result_video_path = os.path.join(app.config['RESULT_FOLDER'], video_filename)
-    # if not os.path.exists(result_video_path):
-    #     return "Result video not found", 404
     return render_template('video.html', video_filename=video_filename)
     
 @app.route('/video_feed')
 def video_feed():
-    return Response(face_detect(0),
+    yolo_ver = request.args.get('yolo-version')
+    pass_liveness = request.args.get('pass-liveness', 'false').lower() == 'true'
+
+    def generate_frames():
+        global liveness_passed
+        for frame in face_detect(0, yolo_ver, pass_liveness=pass_liveness):
+            if frame == 'liveness_passed':
+                liveness_passed = True
+            else:
+                yield (b'--frame\r\n'
+                       b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
+
+    return Response(generate_frames(),
                     mimetype='multipart/x-mixed-replace; boundary=frame')
+
+@app.route('/yolo_version', methods=['POST'])
+def yolo_version():
+    yolo_ver = request.form.get('yolo-version')
+    return render_template('webcam.html', yolo_version=yolo_ver)
+
+@app.route('/get_pass_liveness', methods=['GET'])
+def get_pass_liveness():
+    global liveness_passed
+    return jsonify(pass_liveness=liveness_passed)
+
+@app.route('/set_pass_liveness', methods=['POST'])
+def set_pass_liveness():
+    global liveness_passed
+    liveness_passed = False
+    return jsonify(pass_liveness=liveness_passed)
 
 if __name__ == '__main__':
     app.run(debug=True)
