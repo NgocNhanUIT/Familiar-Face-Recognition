@@ -61,8 +61,13 @@ class FaceDatabaseManager:
             face_db = pd.read_csv(self.face_db_path)
             return face_db
         else:
-            print(f"Database file {self.face_db_path} does not exist.")
-            return None
+            print(f"Database file {self.face_db_path} does not exist. Creating a new one.")
+            # Tạo một DataFrame trống với các cột thích hợp
+            columns = ['name'] + [f'vector_{i}' for i in range(512)]
+            face_db = pd.DataFrame(columns=columns)
+            # Lưu DataFrame trống vào file CSV
+            face_db.to_csv(self.face_db_path, index=False)
+            return face_db
 
     def create_faiss_index(self):
         if self.face_db is not None and not self.face_db.empty:
