@@ -6,7 +6,7 @@ from facenet_pytorch import MTCNN, InceptionResnetV1
 import faiss
 
 class FaceDatabaseManager:
-    def __init__(self, face_db_path='face_db.csv', image_size=160, pretrained_model='vggface2'):
+    def __init__(self, face_db_path=r'../data/face_db.csv', image_size=160, pretrained_model='vggface2'):
         self.mtcnn = MTCNN(image_size=image_size)
         self.resnet = InceptionResnetV1(pretrained=pretrained_model).eval()
         self.face_db_path = face_db_path
@@ -88,13 +88,13 @@ class FaceDatabaseManager:
             return None, None, None
 
 if __name__ == "__main__":
-    file_path = 'face_db.csv'
+    file_path = r"./data/face_db.csv"
     manager = FaceDatabaseManager(face_db_path=file_path)
     # manager.add_folder_to_face_db(r"C:\Users\admin\Downloads\reg\lfw\Charles_Bronson")
     # manager.add_folder_to_face_db(r"C:\Users\admin\Downloads\reg\lfw\Emma_Thompson")
-    img_embedding, img_cropped = manager.get_embedding(r"C:\Users\admin\Downloads\reg\lfw\Charles_Bronson\Charles_Bronson_0001.jpg")
+    img_embedding, img_cropped = manager.get_embedding(r"C:\Users\admin\Downloads\trump.jpg")
     manager.save_img(img_cropped, "face_cropped.jpg")
-    find_indices, find_distances, names = manager.find_k_nearest_neighbors(img_embedding, k=3, threshold=0.6)
+    find_indices, find_distances, names = manager.find_k_nearest_neighbors(img_embedding, k=3, threshold=0.3)
     
     print(find_indices)
     print(find_distances)

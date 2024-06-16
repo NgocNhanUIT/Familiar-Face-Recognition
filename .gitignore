@@ -6,3 +6,4 @@ test.py
 face_db.csv
 face.jpg
 /weights/
+/utils/__pycache__/
