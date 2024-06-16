@@ -2,11 +2,14 @@ import os
 import numpy as np
 import pandas as pd
 from PIL import Image
-from facenet_pytorch import MTCNN, InceptionResnetV1
 import faiss
 
+import sys
+sys.path.append(r"./")
+from facenet_pytorch import MTCNN, InceptionResnetV1
+
 class FaceDatabaseManager:
-    def __init__(self, face_db_path=r'../data/face_db.csv', image_size=160, pretrained_model='vggface2'):
+    def __init__(self, face_db_path=r'./data/face_db.csv', image_size=160, pretrained_model='vggface2'):
         self.mtcnn = MTCNN(image_size=image_size)
         self.resnet = InceptionResnetV1(pretrained=pretrained_model).eval()
         self.face_db_path = face_db_path

@@ -3,8 +3,11 @@ import cv2
 import numpy as np
 from ultralytics import YOLOv10, YOLO
 import cvzone
-from facenet_pytorch import MTCNN, InceptionResnetV1
 import torch.nn.functional as F
+
+import sys
+sys.path.append(r"./")
+from facenet_pytorch import MTCNN, InceptionResnetV1
 
 class Liveness:
     def __init__(self, yolo_version, yolov10_weight_path, yolov8_weight_path):
@@ -43,7 +46,7 @@ class Liveness:
                 return box, label
         return [], None
 
-    def convert_cv2_to_pil(image):
+    def convert_cv2_to_pil(self, image):
         image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
         return Image.fromarray(image)
 
@@ -76,6 +79,8 @@ class Liveness:
         if self.compute_iou(bbox1, bbox2) > threshold1:
             # face1 = Image.open(face1_path)
             # face2 = Image.open(face2_path)
+            print(face1.shape)
+            print(face2.shape)
             face1 = self.convert_cv2_to_pil(face1)
             face2 = self.convert_cv2_to_pil(face2)
               
@@ -167,7 +172,7 @@ def face_detect(video_source, liveness: Liveness):
 
 
 if __name__ == "__main__":
-    liveness = Liveness(yolo_version="yolov10", yolov10_weight_path="yolov10.pt", yolov8_weight_path="yolov8.pt")
+    liveness = Liveness(yolo_version="yolov10", yolov10_weight_path="weights/yolov10.pt", yolov8_weight_path="weights/yolov8.pt")
     face_detect(video_source=0, liveness=liveness)
 # Example usage
 # face_detect(video_source=0)  # or video_source="path_to_video_file"

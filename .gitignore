@@ -4,6 +4,6 @@ test.py
 /facenet_pytorch/
 /img/
 face_db.csv
-face.jpg
+face_cropped.jpg
 /weights/
 /utils/__pycache__/
