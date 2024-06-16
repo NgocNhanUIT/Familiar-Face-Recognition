@@ -28,7 +28,7 @@ body {
     font-size: 1rem;
     font-weight: 400;
     line-height: 1.5;
-    color: #515151;
+    /* color: #515151; */
     text-align: left;
     background-color: #e9edf4;
 }
@@ -446,4 +446,100 @@ form{
     .dashboard-compact .dashboard-toolbar {
         left: 0;
     }
+}
+
+.model{
+    padding: 0px 15px 15px 15px;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.face-model{
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+}
+
+#yolo-version{
+    margin-left: 20px;
+    padding: 10px;
+    font-size: 15px;
+    border: 1px solid #ccc;
+    border-radius: 2px;
+    background-color: #f8f8f8;
+}
+
+#yolo-version option{
+    padding: 10px;
+    border-radius: none !important;
+}
+
+#face-reg{
+    margin-left: 20px;
+    padding: 10px;
+    font-size: 15px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    background-color: #443ea2;
+    color: white;
+}
+
+#face-reg:hover {
+    background-color: #875de5;
+    cursor: pointer;
+}
+
+#face-reg:disabled {
+    background-color: #f8f8f8;
+    color: #ccc;
+}
+
+.card-header{
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+    justify-content: center;
+}
+
+.info{
+    border: 1px solid #443ea2;
+    border-radius: 5px;
+    margin-left: 20px;
+    padding: 30px;
+    height: 500px;
+}
+
+.webcam{
+    border: 1px solid #443ea2;
+    width: 620px;
+    height: 500px;
+}
+
+.face-info{
+    border: 1px solid #443ea2;
+    border-radius: 5px;
+    width: 250px;
+    height: 300px;
+    align-items: center;
+}
+
+.user-info{
+    margin-top: 20px;
+    border: 1px solid #443ea2;
+    border-radius: 5px;
+    width: 250px;
+    height: 100px;
+    align-items: center;
+}
+
+p{
+    margin-top: auto;
+}
+
+.face-info img{
+    width: 200px;
+    height: 250px;
 }
