@@ -10,3 +10,7 @@ test.ipynb
 yolov8_weight.pt
 /img/
 face_db.py
+data/
+face_cropped.jpg
+static/images/
+static/result/

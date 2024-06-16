@@ -2,6 +2,8 @@ from flask import Flask, render_template, Response, request, redirect, url_for, 
 import cv2
 from liveness import face_detect
 from faceDetect import process_video
+from utils.manage_db import FaceDatabaseManager
+
 from werkzeug.utils import secure_filename
 import os
 import sqlite3
@@ -15,9 +17,22 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['RESULT_FOLDER'] = RESULT_FOLDER
 video_path = None
 result_path = None
+file_path = r"./data/face_db.csv"
+manager = FaceDatabaseManager(face_db_path=file_path)
+face_path = r"./img/face_open.jpg"
 
 # Global variable to track liveness status
 liveness_passed = False
+
+def recognize(img_path):
+    img_embedding, img_cropped = manager.get_embedding(img_path)
+    cropped_img_path = os.path.join(app.config['RESULT_FOLDER'], "face_cropped.jpg")
+    manager.save_img(img_cropped, cropped_img_path)
+    find_indices, find_distances, names = manager.find_k_nearest_neighbors(img_embedding, k=3, threshold=0.3)
+    if len(find_indices) > 0:
+        return names[0], cropped_img_path
+    else:
+        return "Unknown", cropped_img_path
 
 @app.route('/')
 def index():
@@ -81,6 +96,12 @@ def set_pass_liveness():
     global liveness_passed
     liveness_passed = False
     return jsonify(pass_liveness=liveness_passed)
+
+@app.route('/recognize', methods=['POST'])
+def recognize_route():
+    img_path = request.form['img_path']
+    name, cropped_img_path = recognize(img_path)
+    return jsonify({'name': name, 'img_path': cropped_img_path})
 
 if __name__ == '__main__':
     app.run(debug=True)

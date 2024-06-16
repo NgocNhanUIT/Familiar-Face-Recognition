@@ -523,6 +523,7 @@ form{
     border-radius: 5px;
     width: 250px;
     height: 300px;
+    align-items: center;
 }
 
 .user-info{
@@ -531,8 +532,14 @@ form{
     border-radius: 5px;
     width: 250px;
     height: 100px;
+    align-items: center;
 }
 
 p{
     margin-top: auto;
+}
+
+.face-info img{
+    width: 200px;
+    height: 250px;
 }

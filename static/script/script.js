@@ -44,7 +44,9 @@ $(document).ready(function () {
                 console.log("Yolo version changed to " + selectedVersion);
                 // Update the src attribute of the img tag to include the new yolo-version
                 $('img').attr('src', '/video_feed?yolo-version=' + selectedVersion);
-                
+                // Reset face-info and user-info divs
+                $('.face-info').html('<p>Face</p>');
+                $('.user-info').html('<p>Information</p>');
             }
         });
     });
@@ -58,6 +60,28 @@ $(document).ready(function () {
             }
         });
     });
+    $('#face-reg').click(function() {
+        $.ajax({
+            url: '/recognize',
+            type: 'POST',
+            data: { img_path: './img/face_open.jpg' },  // Replace with actual image path
+            success: function(response) {
+                console.log(response);
+                // Check the name
+                if (response.name === 'Unknown') {
+                    // Display the stranger image
+                    $('.face-info').html('<img src="../static/images/stranger.png" alt="Stranger">');
+                } else {
+                    // Display the recognized face
+                    $('.face-info').html('<img src="' + response.img_path + '" alt="Recognized face">');
+                }
+    
+                // Display the name
+                $('.user-info').html('<p>' + response.name + '</p>');
+            }
+        });
+    });
+    
     function checkLiveness() {
         $.getJSON('/get_pass_liveness', function(data) {
             if (data.pass_liveness) {
