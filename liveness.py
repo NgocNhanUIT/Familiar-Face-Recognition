@@ -6,8 +6,8 @@ import cvzone
 from facenet_pytorch import MTCNN, InceptionResnetV1
 import torch.nn.functional as F
 
-yolov10_weight_path = r".\best.pt"
-yolov8_weight_path = r".\yolov8_weight.pt"
+yolov10_weight_path = r".\weights\yolov10_weight.pt"
+yolov8_weight_path = r".\weights\yolov8_weight.pt"
 
 def select_largest_face(face_boxes,whs):
     largest_area = 0

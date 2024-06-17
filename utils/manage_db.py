@@ -34,11 +34,12 @@ class FaceDatabaseManager:
         numpy_array = tensor_normalized.byte().numpy()
         image = Image.fromarray(numpy_array)
         image.save(save_path)
-
-    def add_face_db(self, img_path):
+    
+    def add_face_db(self, img_path, name = None):
         img_embedding, _ = self.get_embedding(img_path)
         if img_embedding is not None:
-            name = os.path.basename(img_path).split('.')[0][:-5].replace('_', ' ')
+            if name is None:
+                name = os.path.basename(img_path).split('.')[0][:-5].replace('_', ' ')
             new_entry = pd.DataFrame([[name] + img_embedding.tolist()], columns=['name'] + [f'vector_{i}' for i in range(512)])
             if self.face_db is not None:
                 self.face_db = pd.concat([self.face_db, new_entry], ignore_index=True)
