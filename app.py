@@ -1,20 +1,23 @@
 from flask import Flask, render_template, Response, request, redirect, url_for, jsonify
 import cv2
 from liveness import face_detect
-from faceDetect import process_video
+from utils.faceDetect import process_video, face_detector
 from utils.manage_db import FaceDatabaseManager
-
+import cvzone
 from werkzeug.utils import secure_filename
 import os
 import sqlite3
 from datetime import datetime
+import numpy as np
 
 app = Flask(__name__)
 
 UPLOAD_FOLDER = r'.\static\upload'
 RESULT_FOLDER = r'.\static\result'
+IMAGE_FOLDER = r'.\static\images'
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['RESULT_FOLDER'] = RESULT_FOLDER
+app.config['IMAGE_FOLDER'] = IMAGE_FOLDER
 video_path = None
 result_path = None
 file_path = r"./data/face_db.csv"
@@ -22,7 +25,8 @@ manager = FaceDatabaseManager(face_db_path=file_path)
 face_path = r"./img/face_open.jpg"
 
 # Global variable to track liveness status
-liveness_passed = False
+liveness_passed = False 
+face_frame = None
 
 def recognize(img_path):
     img_embedding, img_cropped = manager.get_embedding(img_path)
@@ -30,9 +34,9 @@ def recognize(img_path):
     manager.save_img(img_cropped, cropped_img_path)
     find_indices, find_distances, names = manager.find_k_nearest_neighbors(img_embedding, k=3, threshold=0.3)
     if len(find_indices) > 0:
-        return names[0], cropped_img_path
+        return names[0], cropped_img_path, find_distances[0]
     else:
-        return "Unknown", cropped_img_path
+        return "Unknown", cropped_img_path, 0
 
 @app.route('/')
 def index():
@@ -43,6 +47,10 @@ def index():
 @app.route('/video')
 def index_video():
     return render_template('video.html', video_filename='')
+
+@app.route('/register')
+def index_register():
+    return render_template('register.html')
 
 @app.route('/upload_video', methods=['POST'])
 def upload_video():
@@ -81,6 +89,32 @@ def video_feed():
     return Response(generate_frames(),
                     mimetype='multipart/x-mixed-replace; boundary=frame')
 
+@app.route('/video_feed1')
+def video_feed1():
+    global cap, face_frame
+    cap = cv2.VideoCapture(0)
+    def generate_frame():
+        global face_frame
+        while True:
+            success, frame = cap.read()
+            if not success:
+                break
+            else:
+                frame = cv2.resize(frame, (620, 500))
+                face_results = face_detector.predict(frame, conf=0.4)
+                for infor in face_results:
+                    parameters = infor.boxes
+                    for box in parameters:
+                        x1, y1, x2, y2 = box.xyxy[0]
+                        x1, y1, x2, y2 = int(x1), int(y1), int(x2), int(y2)
+                        h, w = y2-y1, x2-x1
+                        cvzone.cornerRect(frame, [x1, y1, w, h], l=9, rt=3)
+                face_frame = cv2.imencode('.jpg', frame)[1].tobytes()
+                yield (b'--frame\r\n'
+                       b'Content-Type: image/jpeg\r\n\r\n' + face_frame + b'\r\n')
+
+    return Response(generate_frame(), mimetype='multipart/x-mixed-replace; boundary=frame')
+
 @app.route('/yolo_version', methods=['POST'])
 def yolo_version():
     yolo_ver = request.form.get('yolo-version')
@@ -100,8 +134,35 @@ def set_pass_liveness():
 @app.route('/recognize', methods=['POST'])
 def recognize_route():
     img_path = request.form['img_path']
-    name, cropped_img_path = recognize(img_path)
-    return jsonify({'name': name, 'img_path': cropped_img_path})
+    name, cropped_img_path, distance = recognize(img_path)
+    return jsonify({'name': name, 'img_path': cropped_img_path, 'distance': float(distance)})
+
+@app.route('/get_face', methods=['POST'])
+def get_face():
+    global cap, face_frame
+    if face_frame is not None:
+        # Save the current frame
+        nparr = np.frombuffer(face_frame, np.uint8)
+        img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+        
+        # Detect face in the frame
+        face_results = face_detector.predict(img, conf=0.4)
+        if face_results:
+            parameters = face_results[0].boxes[0]  # Assuming one face and one box
+            x1, y1, x2, y2 = int(parameters.xyxy[0][0]), int(parameters.xyxy[0][1]), int(parameters.xyxy[0][2]), int(parameters.xyxy[0][3])
+            cropped_face = img[y1:y2, x1:x2]
+            face_img_path = os.path.join(IMAGE_FOLDER, "register_image.jpg")
+            cv2.imwrite(face_img_path, cropped_face)
+            cap.release()  # Stop the webcam
+            return jsonify(success=True, img_path=face_img_path)
+    return jsonify(success=False)
+
+@app.route('/register_face', methods=['POST'])
+def register_face():
+    name = request.form['name']
+    img_path = os.path.join(IMAGE_FOLDER, "register_image.jpg")
+    manager.add_face_db(img_path, name)
+    return jsonify(success=True)
 
 if __name__ == '__main__':
     app.run(debug=True)

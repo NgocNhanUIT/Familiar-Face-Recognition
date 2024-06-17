@@ -76,8 +76,45 @@ $(document).ready(function () {
                     $('.face-info').html('<img src="' + response.img_path + '" alt="Recognized face">');
                 }
     
-                // Display the name
-                $('.user-info').html('<p>' + response.name + '</p>');
+                // Display the name and distance
+                $('.user-info').html('<p>' + response.name + '</p><p>' + response.distance + '</p>');
+            }
+        });
+    });
+
+    $('#get-face').click(function () {
+        $.ajax({
+            url: '/get_face',
+            type: 'POST',
+            success: function (response) {
+                if (response.success) {
+                    $('.face-info').html('<img src="' + response.img_path + '" alt="Cropped Face">');
+                } else {
+                    alert('Failed to capture face.');
+                }
+            },
+            error: function (jqXHR, textStatus, errorMessage) {
+                console.log(errorMessage);
+            }
+        });
+    });
+
+    $('#regist').click(function (event) {
+        event.preventDefault();
+        var name = $('#name').val(); // Assuming 'name' is the id of the input field for the name
+        $.ajax({
+            url: '/register_face',
+            type: 'POST',
+            data: { 'name': name },
+            success: function (response) {
+                if (response.success) {
+                    $('form').append('<p>Face registered successfully.</p>');
+                } else {
+                    alert('Failed to register face.');
+                }
+            },
+            error: function (jqXHR, textStatus, errorMessage) {
+                console.log(errorMessage);
             }
         });
     });
