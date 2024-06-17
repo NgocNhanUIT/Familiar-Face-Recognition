@@ -3,6 +3,8 @@ import numpy as np
 import pandas as pd
 from PIL import Image
 import faiss
+import sqlite3
+import datetime
 
 import sys
 sys.path.append(r"./")
@@ -90,6 +92,34 @@ class FaceDatabaseManager:
         else:
             print("FAISS index has not been created.")
             return None, None, None
+    
+    def attendance(self, name):
+        current_date = datetime.datetime.now().strftime('%Y-%m-%d')
+        conn = sqlite3.connect("./data/attendance.db")
+        cursor = conn.cursor()
+
+        # # Create the 'attendance' table if it doesn't exist
+        # cursor.execute("""
+        #     CREATE TABLE IF NOT EXISTS attendance (
+        #         name TEXT,
+        #         date TEXT,
+        #         time TEXT,
+        #         PRIMARY KEY (name, date)
+        #     )
+        # """)
+        cursor.execute("SELECT * FROM attendance WHERE name = ? AND date = ?", (name, current_date))
+        existing_entry = cursor.fetchone()
+
+        if existing_entry:
+            # print(f"{name} is already marked as present for {current_date}")
+            pass
+        else:
+            current_time = datetime.datetime.now().strftime('%H:%M:%S')
+            cursor.execute("INSERT INTO attendance (name, time, date) VALUES (?, ?, ?)", (name, current_time, current_date))
+            conn.commit()
+            # print(f"{name} marked as present for {current_date} at {current_time}")
+
+        conn.close()
 
 if __name__ == "__main__":
     file_path = r"./data/face_db.csv"

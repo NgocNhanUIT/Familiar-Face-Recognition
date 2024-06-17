@@ -3,11 +3,11 @@ import cv2
 from liveness import face_detect
 from utils.faceDetect import process_video, face_detector
 from utils.manage_db import FaceDatabaseManager
+import sqlite3
+from datetime import datetime
 import cvzone
 from werkzeug.utils import secure_filename
 import os
-import sqlite3
-from datetime import datetime
 import numpy as np
 
 app = Flask(__name__)
@@ -34,6 +34,7 @@ def recognize(img_path):
     manager.save_img(img_cropped, cropped_img_path)
     find_indices, find_distances, names = manager.find_k_nearest_neighbors(img_embedding, k=3, threshold=0.3)
     if len(find_indices) > 0:
+        manager.attendance(names[0])
         return names[0], cropped_img_path, find_distances[0]
     else:
         return "Unknown", cropped_img_path, 0
@@ -51,6 +52,35 @@ def index_video():
 @app.route('/register')
 def index_register():
     return render_template('register.html')
+
+@app.route('/tracker')
+def index_tracker():
+    global cap
+    if cap is not None:
+        cap.release()
+    return render_template('attendance.html', selected_date='', no_data=False)
+
+@app.route('/attendance', methods=['POST'])
+def attendance():
+    global cap
+    if cap is not None:
+        cap.release()
+    selected_date = request.form.get('selected_date')
+    selected_date_obj = datetime.strptime(selected_date, '%Y-%m-%d')
+    formatted_date = selected_date_obj.strftime('%Y-%m-%d')
+
+    conn = sqlite3.connect('./data/attendance.db')
+    cursor = conn.cursor()
+
+    cursor.execute("SELECT name, time FROM attendance WHERE date = ?", (formatted_date,))
+    attendance_data = cursor.fetchall()
+
+    conn.close()
+
+    if not attendance_data:
+        return render_template('attendance.html', selected_date=selected_date, no_data=True)
+    
+    return render_template('attendance.html', selected_date=selected_date, attendance_data=attendance_data)
 
 @app.route('/upload_video', methods=['POST'])
 def upload_video():
