@@ -23,7 +23,7 @@
                 <a href="/" class="dashboard-nav-item"><i class="fas fa-camera"></i> Webcam </a>
                 <a href="/video" class="dashboard-nav-item active"><i class="fas fa-video"></i> Video</a>
                 <a href="/register" class="dashboard-nav-item"><i class="fas fa-file-upload"></i> Face Register </a>
-                <a href="/attendance" class="dashboard-nav-item"><i class="fas fa-user"></i> Attendance Tracker </a>
+                <a href="/tracker" class="dashboard-nav-item"><i class="fas fa-user"></i> Attendance Tracker </a>
                 <div class="nav-item-divider"></div>
             </nav>
         </div>
@@ -34,7 +34,7 @@
             </header>
             <div class='dashboard-content'>
                 <form id="uploadForm" action="/upload_video" method="post" enctype="multipart/form-data">
-                    <label for="videoFile">Upload Video:</label>
+                    <label class="up-vid" for="videoFile">Upload Video:</label>
                     <input type="file" class="form-control-file" id="videoFile" name="videoFile" accept="video/*">
                     <button type="submit" class="btn btn-primary">Submit</button>
                 </form>

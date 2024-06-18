@@ -3,18 +3,20 @@ import numpy as np
 import pandas as pd
 from PIL import Image
 import faiss
+import sqlite3
+import datetime
 
 import sys
 sys.path.append(r"./")
-from facenet_pytorch import MTCNN, InceptionResnetV1
+from utils.models import ModelManager
 
-class FaceDatabaseManager:
-    def __init__(self, face_db_path=r'./data/face_db.csv', image_size=160, pretrained_model='vggface2'):
-        self.mtcnn = MTCNN(image_size=image_size)
-        self.resnet = InceptionResnetV1(pretrained=pretrained_model).eval()
+class ManageDB(ModelManager):
+    def __init__(self, face_db_path=r'./data/face_db.csv'):
+        super().__init__()
         self.face_db_path = face_db_path
         self.face_db = self.load_db()
         self.index_faiss = self.create_faiss_index()
+
 
     def get_embedding(self, img_path):
         img = Image.open(img_path)
@@ -34,7 +36,7 @@ class FaceDatabaseManager:
         numpy_array = tensor_normalized.byte().numpy()
         image = Image.fromarray(numpy_array)
         image.save(save_path)
-    
+        
     def add_face_db(self, img_path, name = None):
         img_embedding, _ = self.get_embedding(img_path)
         if img_embedding is not None:
@@ -48,6 +50,8 @@ class FaceDatabaseManager:
 
             # Ghi vào file CSV
             self.face_db.to_csv(self.face_db_path, index=False)
+            self.index_faiss = self.create_faiss_index()
+            print("add successfully")
 
     def add_folder_to_face_db(self, folder_path):
         for filename in os.listdir(folder_path):
@@ -61,8 +65,13 @@ class FaceDatabaseManager:
             face_db = pd.read_csv(self.face_db_path)
             return face_db
         else:
-            print(f"Database file {self.face_db_path} does not exist.")
-            return None
+            print(f"Database file {self.face_db_path} does not exist. Creating a new one.")
+            # Tạo một DataFrame trống với các cột thích hợp
+            columns = ['name'] + [f'vector_{i}' for i in range(512)]
+            face_db = pd.DataFrame(columns=columns)
+            # Lưu DataFrame trống vào file CSV
+            face_db.to_csv(self.face_db_path, index=False)
+            return face_db
 
     def create_faiss_index(self):
         if self.face_db is not None and not self.face_db.empty:
@@ -90,14 +99,45 @@ class FaceDatabaseManager:
         else:
             print("FAISS index has not been created.")
             return None, None, None
+    
+    def attendance(self, name):
+        current_date = datetime.datetime.now().strftime('%Y-%m-%d')
+        conn = sqlite3.connect("./data/attendance.db")
+        cursor = conn.cursor()
+
+        # Create the 'attendance' table if it doesn't exist
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS attendance (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                name TEXT,
+                date TEXT,
+                time TEXT
+            )
+        """)
+        cursor.execute("SELECT * FROM attendance WHERE name = ? AND date = ?", (name, current_date))
+        # existing_entry = cursor.fetchone()
+
+        # if existing_entry:
+        #     # print(f"{name} is already marked as present for {current_date}")
+        #     pass
+        # else:
+        current_time = datetime.datetime.now().strftime('%H:%M:%S')
+        cursor.execute("INSERT INTO attendance (name, time, date) VALUES (?, ?, ?)", (name, current_time, current_date))
+        conn.commit()
+        # print(f"{name} marked as present for {current_date} at {current_time}")
+
+        conn.close()
 
 if __name__ == "__main__":
     file_path = r"./data/face_db.csv"
-    manager = FaceDatabaseManager(face_db_path=file_path)
+    manager = ManageDB(face_db_path=file_path)
+    manager.load_recognition_model()
+    
     # manager.add_folder_to_face_db(r"C:\Users\admin\Downloads\reg\lfw\Charles_Bronson")
     # manager.add_folder_to_face_db(r"C:\Users\admin\Downloads\reg\lfw\Emma_Thompson")
-    manager.add_face_db(r"C:\Users\NHAN\Downloads\Nhan_0001.jpg")
-    # img_embedding, img_cropped = manager.get_embedding(r"C:\Users\NHAN\Downloads\kalama_harris_0001.jpg")
+    manager.add_face_db(r"C:\Users\admin\Pictures\Camera Roll\img1.jpg", "thanhstar")
+    
+    # img_embedding, img_cropped = manager.get_embedding(r"C:\Users\admin\Downloads\reg\lfw\Charles_Bronson\Charles_Bronson_0003.jpg")
     # manager.save_img(img_cropped, "face_cropped.jpg")
     # find_indices, find_distances, names = manager.find_k_nearest_neighbors(img_embedding, k=3, threshold=0.3)
     
