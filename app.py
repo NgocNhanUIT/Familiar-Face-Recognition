@@ -55,16 +55,10 @@ def index_register():
 
 @app.route('/tracker')
 def index_tracker():
-    global cap
-    if cap is not None:
-        cap.release()
     return render_template('attendance.html', selected_date='', no_data=False)
 
 @app.route('/attendance', methods=['POST'])
 def attendance():
-    global cap
-    if cap is not None:
-        cap.release()
     selected_date = request.form.get('selected_date')
     selected_date_obj = datetime.strptime(selected_date, '%Y-%m-%d')
     formatted_date = selected_date_obj.strftime('%Y-%m-%d')
@@ -131,6 +125,7 @@ def video_feed1():
                 break
             else:
                 frame = cv2.resize(frame, (620, 500))
+                face_frame = cv2.imencode('.jpg', frame)[1].tobytes()
                 face_results = face_detector.predict(frame, conf=0.4)
                 for infor in face_results:
                     parameters = infor.boxes
@@ -139,9 +134,9 @@ def video_feed1():
                         x1, y1, x2, y2 = int(x1), int(y1), int(x2), int(y2)
                         h, w = y2-y1, x2-x1
                         cvzone.cornerRect(frame, [x1, y1, w, h], l=9, rt=3)
-                face_frame = cv2.imencode('.jpg', frame)[1].tobytes()
+                frame = cv2.imencode('.jpg', frame)[1].tobytes()
                 yield (b'--frame\r\n'
-                       b'Content-Type: image/jpeg\r\n\r\n' + face_frame + b'\r\n')
+                       b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
 
     return Response(generate_frame(), mimetype='multipart/x-mixed-replace; boundary=frame')
 

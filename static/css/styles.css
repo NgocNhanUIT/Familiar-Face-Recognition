@@ -524,6 +524,11 @@ h1, .h1 {
     margin-bottom: 20px;
 }
 
+.face-info img{
+    width: 250px;
+    height: 300px;
+}
+
 .user-info{
     margin-top: 20px;
     border: 1px solid #443ea2;
@@ -535,11 +540,6 @@ h1, .h1 {
 
 p{
     margin-top: auto;
-}
-
-.face-info img{
-    width: 200px;
-    height: 250px;
 }
 
 form{
