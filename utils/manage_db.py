@@ -8,7 +8,7 @@ import sys
 sys.path.append(r"./")
 from utils.models import ModelManager
 
-class FaceDatabaseManager(ModelManager):
+class ManageDB(ModelManager):
     def __init__(self, face_db_path=r'./data/face_db.csv'):
         super().__init__()
         self.face_db_path = face_db_path
@@ -47,6 +47,7 @@ class FaceDatabaseManager(ModelManager):
 
             # Ghi vào file CSV
             self.face_db.to_csv(self.face_db_path, index=False)
+            print("add successfully")
 
     def add_folder_to_face_db(self, folder_path):
         for filename in os.listdir(folder_path):
@@ -97,17 +98,17 @@ class FaceDatabaseManager(ModelManager):
 
 if __name__ == "__main__":
     file_path = r"./data/face_db.csv"
-    manager = FaceDatabaseManager(face_db_path=file_path)
+    manager = ManageDB(face_db_path=file_path)
     manager.load_recognition_model()
     
     # manager.add_folder_to_face_db(r"C:\Users\admin\Downloads\reg\lfw\Charles_Bronson")
     # manager.add_folder_to_face_db(r"C:\Users\admin\Downloads\reg\lfw\Emma_Thompson")
-    # manager.add_face_db(r"C:\Users\NHAN\Downloads\Nhan_0001.jpg")
+    manager.add_face_db(r"C:\Users\admin\Pictures\Camera Roll\img1.jpg", "thanhstar")
     
-    img_embedding, img_cropped = manager.get_embedding(r"C:\Users\admin\Downloads\reg\lfw\Charles_Bronson\Charles_Bronson_0003.jpg")
-    manager.save_img(img_cropped, "face_cropped.jpg")
-    find_indices, find_distances, names = manager.find_k_nearest_neighbors(img_embedding, k=3, threshold=0.3)
+    # img_embedding, img_cropped = manager.get_embedding(r"C:\Users\admin\Downloads\reg\lfw\Charles_Bronson\Charles_Bronson_0003.jpg")
+    # manager.save_img(img_cropped, "face_cropped.jpg")
+    # find_indices, find_distances, names = manager.find_k_nearest_neighbors(img_embedding, k=3, threshold=0.3)
     
-    print(find_indices)
-    print(find_distances)
-    print(names)
+    # print(find_indices)
+    # print(find_distances)
+    # print(names)

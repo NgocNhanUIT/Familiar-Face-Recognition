@@ -127,17 +127,7 @@ def face_detect(video_source, liveness: Liveness):
             if (prev_eyes_closed == True) and (eyes_closed == False):
                 liveness.save_cropped_face(prev_face, "./img/face_close.jpg")
                 liveness.save_cropped_face(cur_face, "./img/face_open.jpg")
-                # iou = liveness.compute_iou(prev_frame_face_box, largest_face_box)
-                # print(f"iou: {iou}")
-                # if iou > 0.9:
-                #     cur_face = Image.open("./img/face_open.jpg")
-                #     prev_face = Image.open("./img/face_close.jpg")
-                #     if prev_face is not None:
-                #         similarity = liveness.face_similarity(prev_face, cur_face)
-                #         print("Similarity: ", similarity)
-                #         if similarity > 0.95:
-                #             pass_liveness = True
-                #             # break
+
                 pass_liveness = liveness.check_liveness(prev_frame_face_box, largest_face_box, 0.9, prev_face, cur_face, 0.95)
             prev_frame_face_box = largest_face_box
             prev_eyes_closed = eyes_closed
@@ -163,5 +153,3 @@ if __name__ == "__main__":
     liveness.load_recognition_model()
     
     face_detect(video_source=0, liveness=liveness)
-# Example usage
-# face_detect(video_source=0)  # or video_source="path_to_video_file"
