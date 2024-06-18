@@ -1,31 +1,17 @@
 from PIL import Image
 import cv2
 import numpy as np
-from ultralytics import YOLOv10, YOLO
 import cvzone
 import torch.nn.functional as F
 
 import sys
 sys.path.append(r"./")
-from facenet_pytorch import MTCNN, InceptionResnetV1
+from utils.models import ModelManager
 
-class Liveness:
-    def __init__(self, yolo_version, yolov10_weight_path, yolov8_weight_path):
-        self.yolo_version = yolo_version
-        self.yolov10_weight_path = yolov10_weight_path
-        self.yolov8_weight_path = yolov8_weight_path
-        self.model, self.mtcnn, self.resnet = self.load_model()
+class Liveness(ModelManager):
+    def __init__(self):
+        super().__init__()
 
-    def load_model(self):
-        print("Loading models...")
-        if self.yolo_version == "yolov10":
-            model = YOLOv10(self.yolov10_weight_path)
-        elif self.yolo_version == "yolov8":
-            model = YOLO(self.yolov8_weight_path)
-        mtcnn = MTCNN(image_size=160, margin=0)
-        resnet = InceptionResnetV1(pretrained='vggface2').eval()
-        print("Models loaded successfully.")
-        return model, mtcnn, resnet
 
     def select_largest_face(self, face_boxes, whs):
         largest_area = 0
@@ -79,8 +65,6 @@ class Liveness:
         if self.compute_iou(bbox1, bbox2) > threshold1:
             # face1 = Image.open(face1_path)
             # face2 = Image.open(face2_path)
-            print(face1.shape)
-            print(face2.shape)
             face1 = self.convert_cv2_to_pil(face1)
             face2 = self.convert_cv2_to_pil(face2)
               
@@ -110,7 +94,7 @@ def face_detect(video_source, liveness: Liveness):
             break
         
         frame = cv2.resize(frame, (840, 620))
-        results = liveness.model(frame, conf=0.4)
+        results = liveness.yolo_model(frame, conf=0.4)
         face_boxes, whs, eye_boxes, cls_list_eyes, bboxs = [], [], [], [], []
         
         for result in results:
@@ -162,17 +146,22 @@ def face_detect(video_source, liveness: Liveness):
         for box in bboxs:
             x, y, w, h = box
             cvzone.cornerRect(frame, [x, y, w, h], l=9, rt=3)
+            cv2.imshow("frame", frame)
+            cv2.waitKey(1)
         
         if pass_liveness:
             print("All conditions satisfied.")
             break
-        
-        cv2.imshow("frame", frame)
-        cv2.waitKey(1)
-
 
 if __name__ == "__main__":
-    liveness = Liveness(yolo_version="yolov10", yolov10_weight_path="weights/yolov10.pt", yolov8_weight_path="weights/yolov8.pt")
+    yolo_version = "yolov10"
+    yolov10_weight_path = "weights/yolov10.pt"
+    yolov8_weight_path = "weights/yolov8.pt"
+    
+    liveness = Liveness()
+    liveness.load_yolo_model(yolo_version=yolo_version, yolov10_weight_path=yolov10_weight_path, yolov8_weight_path=yolov8_weight_path)
+    liveness.load_recognition_model()
+    
     face_detect(video_source=0, liveness=liveness)
 # Example usage
 # face_detect(video_source=0)  # or video_source="path_to_video_file"

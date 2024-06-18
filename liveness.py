@@ -6,8 +6,8 @@ import cvzone
 from facenet_pytorch import MTCNN, InceptionResnetV1
 import torch.nn.functional as F
 
-yolov10_weight_path = r".\best.pt"
-yolov8_weight_path = r".\yolov8_weight.pt"
+yolov10_weight_path = r"./weights/yolov10.pt"
+yolov8_weight_path = r"./weights/yolov8.pt"
 
 def select_largest_face(face_boxes,whs):
     largest_area = 0
@@ -61,7 +61,7 @@ def face_similarity(face1, face2, mtcnn, resnet):
     return F.cosine_similarity(img_embedding1, img_embedding2)
 
 def load_model(yolo_version):
-    print("Loading models...")
+    print("Loading models liveness.py")
     if yolo_version == "yolov10":
         model = YOLOv10(yolov10_weight_path)
     elif yolo_version == "yolov8":
@@ -136,6 +136,13 @@ def face_detect(video_source, yoloversion, pass_liveness=False):
                         similarity = face_similarity(prev_face, cur_face, mtcnn, resnet)
                         if similarity > 0.95:
                             yield 'liveness_passed'
+                            for box in bboxs:
+                                x, y, w, h = box
+                                cvzone.cornerRect(frame, [x, y, w, h], l=9, rt=3)
+                                
+                            ret, buffer = cv2.imencode('.jpg', frame)
+                            frame = buffer.tobytes()
+                            yield frame
                             break
 
             prev_frame_face_box = largest_face_box
