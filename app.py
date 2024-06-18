@@ -1,6 +1,6 @@
 from flask import Flask, render_template, Response, request, redirect, url_for, jsonify
 import cv2
-from utils.manage_db import FaceDatabaseManager
+from utils.manage_db import ManageDB
 from utils.process import Process
 import sqlite3
 from datetime import datetime
@@ -25,7 +25,7 @@ yolov10_weight_path = "weights/yolov10.pt"
 yolov8_weight_path = "weights/yolov8.pt"
 process = Process()
 process.load_recognition_model()
-manager = FaceDatabaseManager(face_db_path=file_path)
+manager = ManageDB(face_db_path=file_path)
 manager.load_recognition_model()
 
 # Global variable to track liveness status
@@ -36,7 +36,7 @@ def recognize(img_path):
     img_embedding, img_cropped = manager.get_embedding(img_path)
     cropped_img_path = os.path.join(app.config['RESULT_FOLDER'], "face_cropped.jpg")
     manager.save_img(img_cropped, cropped_img_path)
-    find_indices, find_distances, names = manager.find_k_nearest_neighbors(img_embedding, k=3, threshold=0.3)
+    find_indices, find_distances, names = manager.find_k_nearest_neighbors(img_embedding, k=3, threshold=0.8)
     if len(find_indices) > 0:
         manager.attendance(names[0])
         return names[0], cropped_img_path, find_distances[0]
