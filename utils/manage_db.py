@@ -8,12 +8,11 @@ import datetime
 
 import sys
 sys.path.append(r"./")
-from facenet_pytorch import MTCNN, InceptionResnetV1
+from utils.models import ModelManager
 
-class FaceDatabaseManager:
-    def __init__(self, face_db_path=r'./data/face_db.csv', image_size=160, pretrained_model='vggface2'):
-        self.mtcnn = MTCNN(image_size=image_size)
-        self.resnet = InceptionResnetV1(pretrained=pretrained_model).eval()
+class FaceDatabaseManager(ModelManager):
+    def __init__(self, face_db_path=r'./data/face_db.csv'):
+        super().__init__()
         self.face_db_path = face_db_path
         self.face_db = self.load_db()
         self.index_faiss = self.create_faiss_index()
@@ -36,7 +35,7 @@ class FaceDatabaseManager:
         numpy_array = tensor_normalized.byte().numpy()
         image = Image.fromarray(numpy_array)
         image.save(save_path)
-    
+        
     def add_face_db(self, img_path, name = None):
         img_embedding, _ = self.get_embedding(img_path)
         if img_embedding is not None:
@@ -63,8 +62,13 @@ class FaceDatabaseManager:
             face_db = pd.read_csv(self.face_db_path)
             return face_db
         else:
-            print(f"Database file {self.face_db_path} does not exist.")
-            return None
+            print(f"Database file {self.face_db_path} does not exist. Creating a new one.")
+            # Tạo một DataFrame trống với các cột thích hợp
+            columns = ['name'] + [f'vector_{i}' for i in range(512)]
+            face_db = pd.DataFrame(columns=columns)
+            # Lưu DataFrame trống vào file CSV
+            face_db.to_csv(self.face_db_path, index=False)
+            return face_db
 
     def create_faiss_index(self):
         if self.face_db is not None and not self.face_db.empty:
@@ -124,13 +128,16 @@ class FaceDatabaseManager:
 if __name__ == "__main__":
     file_path = r"./data/face_db.csv"
     manager = FaceDatabaseManager(face_db_path=file_path)
+    manager.load_recognition_model()
+    
     # manager.add_folder_to_face_db(r"C:\Users\admin\Downloads\reg\lfw\Charles_Bronson")
     # manager.add_folder_to_face_db(r"C:\Users\admin\Downloads\reg\lfw\Emma_Thompson")
-    manager.add_face_db(r"C:\Users\NHAN\Downloads\Nhan_0001.jpg")
-    # img_embedding, img_cropped = manager.get_embedding(r"C:\Users\NHAN\Downloads\kalama_harris_0001.jpg")
-    # manager.save_img(img_cropped, "face_cropped.jpg")
-    # find_indices, find_distances, names = manager.find_k_nearest_neighbors(img_embedding, k=3, threshold=0.3)
+    # manager.add_face_db(r"C:\Users\NHAN\Downloads\Nhan_0001.jpg")
     
-    # print(find_indices)
-    # print(find_distances)
-    # print(names)
+    img_embedding, img_cropped = manager.get_embedding(r"C:\Users\admin\Downloads\reg\lfw\Charles_Bronson\Charles_Bronson_0003.jpg")
+    manager.save_img(img_cropped, "face_cropped.jpg")
+    find_indices, find_distances, names = manager.find_k_nearest_neighbors(img_embedding, k=3, threshold=0.3)
+    
+    print(find_indices)
+    print(find_distances)
+    print(names)

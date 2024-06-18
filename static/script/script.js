@@ -67,15 +67,8 @@ $(document).ready(function () {
             data: { img_path: './img/face_open.jpg' },  // Replace with actual image path
             success: function(response) {
                 console.log(response);
-                // Check the name
-                if (response.name === 'Unknown') {
-                    // Display the stranger image
-                    $('.face-info').html('<img src="../static/images/stranger.png" alt="Stranger">');
-                } else {
-                    // Display the recognized face
-                    $('.face-info').html('<img src="' + response.img_path + '" alt="Recognized face">');
-                }
-    
+                // Display the recognized face
+                $('.face-info').html('<img src="' + response.img_path + '" alt="Recognized face">');
                 // Display the name and distance
                 $('.user-info').html('<p>' + response.name + '</p><p>' + response.distance + '</p>');
             }
