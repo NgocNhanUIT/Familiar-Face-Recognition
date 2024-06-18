@@ -17,6 +17,7 @@ class FaceDatabaseManager(ModelManager):
         self.face_db = self.load_db()
         self.index_faiss = self.create_faiss_index()
 
+
     def get_embedding(self, img_path):
         img = Image.open(img_path)
         img_cropped = self.mtcnn(img)
@@ -49,6 +50,7 @@ class FaceDatabaseManager(ModelManager):
 
             # Ghi vào file CSV
             self.face_db.to_csv(self.face_db_path, index=False)
+            self.index_faiss = self.create_faiss_index()
 
     def add_folder_to_face_db(self, folder_path):
         for filename in os.listdir(folder_path):
@@ -102,26 +104,26 @@ class FaceDatabaseManager(ModelManager):
         conn = sqlite3.connect("./data/attendance.db")
         cursor = conn.cursor()
 
-        # # Create the 'attendance' table if it doesn't exist
-        # cursor.execute("""
-        #     CREATE TABLE IF NOT EXISTS attendance (
-        #         name TEXT,
-        #         date TEXT,
-        #         time TEXT,
-        #         PRIMARY KEY (name, date)
-        #     )
-        # """)
+        # Create the 'attendance' table if it doesn't exist
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS attendance (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                name TEXT,
+                date TEXT,
+                time TEXT
+            )
+        """)
         cursor.execute("SELECT * FROM attendance WHERE name = ? AND date = ?", (name, current_date))
-        existing_entry = cursor.fetchone()
+        # existing_entry = cursor.fetchone()
 
-        if existing_entry:
-            # print(f"{name} is already marked as present for {current_date}")
-            pass
-        else:
-            current_time = datetime.datetime.now().strftime('%H:%M:%S')
-            cursor.execute("INSERT INTO attendance (name, time, date) VALUES (?, ?, ?)", (name, current_time, current_date))
-            conn.commit()
-            # print(f"{name} marked as present for {current_date} at {current_time}")
+        # if existing_entry:
+        #     # print(f"{name} is already marked as present for {current_date}")
+        #     pass
+        # else:
+        current_time = datetime.datetime.now().strftime('%H:%M:%S')
+        cursor.execute("INSERT INTO attendance (name, time, date) VALUES (?, ?, ?)", (name, current_time, current_date))
+        conn.commit()
+        # print(f"{name} marked as present for {current_date} at {current_time}")
 
         conn.close()
 

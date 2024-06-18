@@ -1,7 +1,5 @@
 from flask import Flask, render_template, Response, request, redirect, url_for, jsonify
 import cv2
-# from liveness import face_detect
-# from utils.faceDetect import process_video, face_detector
 from utils.manage_db import FaceDatabaseManager
 from utils.process import Process
 import sqlite3
