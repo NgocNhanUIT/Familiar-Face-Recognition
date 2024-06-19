@@ -64,7 +64,7 @@ class Process(Liveness):
                     self.save_cropped_face(prev_face, "./img/face_close.jpg")
                     self.save_cropped_face(cur_face, "./img/face_open.jpg")
 
-                    pass_liveness = self.check_liveness(prev_frame_face_box, largest_face_box, 0.9, prev_face, cur_face, 0.95)
+                    pass_liveness = self.check_liveness(prev_frame_face_box, largest_face_box, 0.95, prev_face, cur_face, 0.9)
                 prev_frame_face_box = largest_face_box
                 prev_eyes_closed = eyes_closed
                 prev_face = cur_face.copy()

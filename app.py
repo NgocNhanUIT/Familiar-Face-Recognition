@@ -19,13 +19,13 @@ app.config['RESULT_FOLDER'] = RESULT_FOLDER
 app.config['IMAGE_FOLDER'] = IMAGE_FOLDER
 video_path = None
 result_path = None
-file_path = r"./data/face_db.csv"
+# file_path = r"./data/face_db.csv"
 face_path = r"./img/face_open.jpg"
 yolov10_weight_path = "weights/yolov10.pt"
 yolov8_weight_path = "weights/yolov8.pt"
 process = Process()
 process.load_recognition_model()
-manager = ManageDB(face_db_path=file_path)
+manager = ManageDB()
 manager.load_recognition_model()
 
 # Global variable to track liveness status
@@ -36,12 +36,9 @@ def recognize(img_path):
     img_embedding, img_cropped = manager.get_embedding(img_path)
     cropped_img_path = os.path.join(app.config['RESULT_FOLDER'], "face_cropped.jpg")
     manager.save_img(img_cropped, cropped_img_path)
-    find_indices, find_distances, names = manager.find_k_nearest_neighbors(img_embedding, k=3, threshold=0.8)
-    if len(find_indices) > 0:
-        manager.attendance(names[0])
-        return names[0], cropped_img_path, find_distances[0]
-    else:
-        return "Unknown", cropped_img_path, 0
+    name,score = manager.retrieval_pinecone(img_embedding, k=3, threshold=0.8)
+    manager.attendance(name)
+    return name, cropped_img_path, score
 
 @app.route('/')
 def index():

@@ -9,3 +9,4 @@ static/result/
 /weights/
 /utils/__pycache__/
 static/images/
+.env

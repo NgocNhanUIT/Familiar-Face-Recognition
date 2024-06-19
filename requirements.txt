@@ -3,3 +3,7 @@ omegaconf
 cvzone
 flask
 faiss-cpu
+pinecone-client
+pillow
+python-dotenv
+

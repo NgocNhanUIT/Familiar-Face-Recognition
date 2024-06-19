@@ -5,19 +5,30 @@ from PIL import Image
 import faiss
 import sqlite3
 import datetime
+from pinecone import Pinecone
+import os
 
 import sys
 sys.path.append(r"./")
+
+from dotenv import load_dotenv
+load_dotenv()
+api_key = os.getenv('PINECONE_API_KEY')
+
 from utils.models import ModelManager
 
 class ManageDB(ModelManager):
-    def __init__(self, face_db_path=r'./data/face_db.csv'):
+    def __init__(self):
         super().__init__()
-        self.face_db_path = face_db_path
-        self.face_db = self.load_db()
-        self.index_faiss = self.create_faiss_index()
+        self.pinecone_index = self.create_pinecone_index()
+        self.len_db = self.len_pinecone()
+        self.attendance_db_path = "./data/attendance.db"
 
-
+    def len_pinecone(self):
+        index_stats = self.pinecone_index.describe_index_stats()
+        num_vectors = index_stats['total_vector_count']
+        return num_vectors
+    
     def get_embedding(self, img_path):
         img = Image.open(img_path)
         img_cropped = self.mtcnn(img)
@@ -39,70 +50,49 @@ class ManageDB(ModelManager):
         
     def add_face_db(self, img_path, name = None):
         img_embedding, _ = self.get_embedding(img_path)
+        vectors = []
         if img_embedding is not None:
             if name is None:
                 name = os.path.basename(img_path).split('.')[0][:-5].replace('_', ' ')
-            new_entry = pd.DataFrame([[name] + img_embedding.tolist()], columns=['name'] + [f'vector_{i}' for i in range(512)])
-            if self.face_db is not None:
-                self.face_db = pd.concat([self.face_db, new_entry], ignore_index=True)
-            else:
-                self.face_db = new_entry
-
-            # Ghi vào file CSV
-            self.face_db.to_csv(self.face_db_path, index=False)
-            self.index_faiss = self.create_faiss_index()
+            vectors.append({
+                                'id': f"{name}{self.len_db}",
+                                'values': img_embedding.tolist(),
+                                'metadata': {'name': name}
+                            })
+            self.pinecone_index.upsert(vectors)
+            self.len_db += 1
             print("add successfully")
-
-    def add_folder_to_face_db(self, folder_path):
-        for filename in os.listdir(folder_path):
-            img_path = os.path.join(folder_path, filename)
-            if img_path.lower().endswith(('.png', '.jpg', '.jpeg')):
-                print(f"Adding {img_path} to database")
-                self.add_face_db(img_path)
-
-    def load_db(self):
-        if os.path.exists(self.face_db_path):
-            face_db = pd.read_csv(self.face_db_path)
-            return face_db
         else:
-            print(f"Database file {self.face_db_path} does not exist. Creating a new one.")
-            # Tạo một DataFrame trống với các cột thích hợp
-            columns = ['name'] + [f'vector_{i}' for i in range(512)]
-            face_db = pd.DataFrame(columns=columns)
-            # Lưu DataFrame trống vào file CSV
-            face_db.to_csv(self.face_db_path, index=False)
-            return face_db
+            print("add failed")
 
-    def create_faiss_index(self):
-        if self.face_db is not None and not self.face_db.empty:
-            # Sử dụng IP:Inner Product (tích vô hướng) vì vector đã chuẩn hóa nên tích vô hướng tương đương cosine similarity
-            index_faiss = faiss.IndexFlatIP(512)  
-            vectors = self.face_db.iloc[:, 1:].values.astype('float32')
-            index_faiss.add(vectors)
-            return index_faiss
+    def create_pinecone_index(self):
+        pc = Pinecone(api_key=api_key)
+        # Kết nối tới index
+        pinecone_index = pc.Index('face-reg')
+        return pinecone_index
+    
+    
+    def retrieval_pinecone(self, query_vector, k=3,threshold = 0.5):
+        query_vector = query_vector.tolist()
+        query_results = self.pinecone_index.query(
+                            vector=query_vector,
+                            top_k=k,
+                            # include_values=True
+                            include_metadata=True
+                        )
+        name = query_results["matches"][0]['metadata']["name"]
+        score = query_results["matches"][0]['score']
+        print(name, score)
+        
+        if score > threshold:
+            return name, score
         else:
-            print("Face database is empty. Cannot create FAISS index.")
-            return None
-
-    def find_k_nearest_neighbors(self, query_vector, k, threshold = 0.5):
-        if self.index_faiss is not None:
-            query_vector = query_vector / np.linalg.norm(query_vector)  # Chuẩn hóa vector truy vấn
-            distances, indices = self.index_faiss.search(query_vector.reshape(1, -1), k)
-            
-            # Lọc các kết quả dựa trên ngưỡng
-            valid_indices = np.where(distances[0] >= threshold)[0]
-            filtered_indices = indices[0][valid_indices]
-            filtered_distances = distances[0][valid_indices]
-            list_name = self.face_db.iloc[filtered_indices, 0].tolist()
-            
-            return filtered_indices, filtered_distances, list_name
-        else:
-            print("FAISS index has not been created.")
-            return None, None, None
+            return "Unknown", 0
+        
     
     def attendance(self, name):
         current_date = datetime.datetime.now().strftime('%Y-%m-%d')
-        conn = sqlite3.connect("./data/attendance.db")
+        conn = sqlite3.connect(self.attendance_db_path)
         cursor = conn.cursor()
 
         # Create the 'attendance' table if it doesn't exist
@@ -133,14 +123,8 @@ if __name__ == "__main__":
     manager = ManageDB(face_db_path=file_path)
     manager.load_recognition_model()
     
-    # manager.add_folder_to_face_db(r"C:\Users\admin\Downloads\reg\lfw\Charles_Bronson")
-    # manager.add_folder_to_face_db(r"C:\Users\admin\Downloads\reg\lfw\Emma_Thompson")
-    manager.add_face_db(r"C:\Users\admin\Pictures\Camera Roll\img1.jpg", "thanhstar")
+    # manager.add_face_db(r"C:\Users\admin\Pictures\Camera Roll\img1.jpg", "thanhstar")
     
-    # img_embedding, img_cropped = manager.get_embedding(r"C:\Users\admin\Downloads\reg\lfw\Charles_Bronson\Charles_Bronson_0003.jpg")
-    # manager.save_img(img_cropped, "face_cropped.jpg")
-    # find_indices, find_distances, names = manager.find_k_nearest_neighbors(img_embedding, k=3, threshold=0.3)
-    
-    # print(find_indices)
-    # print(find_distances)
-    # print(names)
+    img_path = r"C:\Users\admin\Pictures\Camera Roll\img1.jpg"
+    img_embedding, img_cropped = manager.get_embedding(img_path)
+    name,score = manager.retrieval_pinecone(img_embedding, k=3, threshold=0.8)
